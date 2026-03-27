@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import PlantCard from '../components/PlantCard';
 
 const CategoryPage = () => {
@@ -25,22 +23,19 @@ const CategoryPage = () => {
   }, [categoryName]);
 
   return (
-    <div className="min-h-screen bg-green-50/50 font-sans">
-      <Navbar />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-grow p-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-8">
-            Plants: {categoryName}
-          </h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredPlants.map(plant => (
-              <PlantCard key={plant._id} plant={plant} />
-            ))}
-          </div>
-        </main>
+    <div className="flex-1 p-8 bg-green-50/50 min-h-screen">
+      <h1 className="text-4xl font-bold text-gray-800 mb-8 capitalize">
+        Plants: {categoryName}
+      </h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {filteredPlants.map(plant => (
+          <PlantCard key={plant._id} plant={plant} />
+        ))}
       </div>
+      {filteredPlants.length === 0 && (
+        <p className="text-center text-gray-500 mt-10">No plants found in this category.</p>
+      )}
     </div>
   );
 };

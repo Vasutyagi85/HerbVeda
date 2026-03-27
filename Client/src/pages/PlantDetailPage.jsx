@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import Accordion from '../components/Accordion'; 
+import NurseryMap from '../components/NurseryMap'; 
 
 const PlantDetailPage = () => {
-  const { id } = useParams(); // Get the plant ID from the URL
-  const [plant, setPlant] = useState(null); // State to hold the plant data
+  const { id } = useParams();
+  const [plant, setPlant] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showMap, setShowMap] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     const fetchPlant = async () => {
@@ -16,56 +20,81 @@ const PlantDetailPage = () => {
         const data = await response.json();
         setPlant(data);
       } catch (error) {
-        console.error("Failed to fetch plant:", error);
+        console.error("Error fetching herb:", error);
       } finally {
         setLoading(false);
       }
     };
     fetchPlant();
-  }, [id]); // Re-run the effect if the ID in the URL changes
+  }, [id]);
 
-  if (loading) {
-    return <div>Loading...</div>; // Show a loading message while fetching
-  }
+  const handleFindNursery = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setShowMap(true);
+        },
+        (error) => alert("Please enable location permissions.")
+      );
+    }
+  };
 
-  if (!plant) {
-    return <div>Plant not found.</div>;
-  }
+  if (loading) return <div className="p-20 text-center font-bold text-green-700">Loading Veda Intelligence...</div>;
+  if (!plant) return <div className="p-20 text-center text-red-500">Plant data not found.</div>;
 
   return (
-    <div className="min-h-screen bg-green-50/50 font-sans">
+    <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
       <div className="flex">
-        <Sidebar />
         <main className="flex-grow p-8">
-          {/* Back Button */}
-          <Link to={-1} className="text-green-700 hover:underline mb-6 inline-block">&larr; Back to list</Link>
+          <Link to={-1} className="text-green-700 hover:underline mb-8 inline-block font-bold">
+            ← Back to Library
+          </Link>
           
-          <h1 className="text-5xl font-bold text-gray-800 mb-2">{plant.name}</h1>
-          <p className="text-xl text-gray-500 italic mb-8">{plant.scientificName}</p>
+          <div className="mb-12">
+            <h1 className="text-6xl font-black text-slate-900 mb-2 tracking-tighter">{plant.name}</h1>
+            <p className="text-2xl text-green-600 italic font-serif opacity-70">
+              {plant.scientificName || plant.SceintificName}
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            {/* Plant Image */}
-            <div className="w-full">
-              <img 
-                src={plant.imageUrl || 'https://via.placeholder.com/800x600'} 
-                alt={plant.name}
-                className="w-full h-auto object-cover rounded-lg shadow-lg"
-              />
-            </div>
-            {/* 3D Model Placeholder */}
-            <div className="w-full h-96 bg-gray-200 rounded-lg shadow-lg flex items-center justify-center">
-              <p className="text-gray-500 text-2xl">3D Model Placeholder</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+            <img 
+              src={plant.imageUrl || 'https://via.placeholder.com/800'} 
+              alt={plant.name}
+              className="w-full h-[450px] object-cover rounded-[2.5rem] shadow-2xl border-4 border-white"
+            />
+            <div className="h-[450px] bg-slate-200 rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-slate-300">
+               <p className="text-slate-400 font-bold uppercase tracking-widest italic">3D Spatial View</p>
             </div>
           </div>
 
-          {/* Plant Description */}
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-3xl font-bold text-gray-700 mb-4">Description</h2>
-            <p className="text-gray-600 leading-relaxed">{plant.description}</p>
+          <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 max-w-5xl">
+            <h2 className="text-3xl font-black text-slate-800 mb-8 border-l-8 border-green-500 pl-5 uppercase tracking-tight">
+              Medicinal Intelligence
+            </h2>
             
-            <h2 className="text-3xl font-bold text-gray-700 mt-6 mb-4">Medicinal Use</h2>
-            <p className="text-gray-600 leading-relaxed">{plant.medicinalUse}</p>
+            <Accordion herbData={plant} />
+
+            <div className="mt-12 pt-10 border-t border-slate-100 text-center md:text-left">
+              <button 
+                onClick={handleFindNursery}
+                className="bg-green-600 text-white px-10 py-5 rounded-full font-black text-lg shadow-lg hover:bg-green-700 hover:shadow-green-100 transition-all active:scale-95 uppercase tracking-widest"
+              >
+                📍 FIND {plant.name} NEARBY
+              </button>
+
+              {showMap && userLocation && (
+                <div className="mt-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                  <h3 className="text-2xl font-black text-slate-800 mb-6 italic">Nearby Botanical Centers:</h3>
+                  <NurseryMap userLocation={userLocation} />
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>
